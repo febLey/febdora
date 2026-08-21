@@ -19,6 +19,32 @@ RUN dnf -y install \
 RUN dnf -y install gcc steam steam-devices zsh
 RUN dnf -y swap ffmpeg-free ffmpeg --allowerasing
 
+COPY cosign.pub /etc/pki/containers/febdora.pub
+
+RUN mkdir -p /etc/containers/registries.d && \
+  cat > /etc/containers/registries.d/febdora.yaml <<EOF
+docker:
+  ghcr.io/febley/febdora:
+    use-sigstore-attachments: true
+EOF
+
+RUN cat > /etc/containers/policy.json <<EOF
+{
+  "default": [{ "type": "insecureAcceptAnything" }],
+  "transports": {
+    "docker": {
+      "ghcr.io/febley/febdora": [
+        {
+          "type": "sigstoreSigned",
+          "keyPath": "/etc/pki/containers/febdora.pub",
+          "signedIdentity": { "type": "matchRepository" }
+        }
+      ]
+    }
+  }
+}
+EOF
+
 RUN dnf clean all && \
   rm -rf /var/cache/* /var/log/* /var/lib/dnf
 
