@@ -22,7 +22,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-      id-token: write # needed for keyless/OIDC signing metadata
+      id-token: write
 
     steps:
       - name: Checkout
