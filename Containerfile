@@ -23,14 +23,17 @@ RUN dnf -y swap ffmpeg-free ffmpeg --allowerasing
 
 COPY cosign.pub /etc/pki/containers/${IMAGE_NAME}.pub
 
-RUN mkdir -p /etc/containers/registries.d && \
-  cat > /etc/containers/registries.d/${IMAGE_NAME}.yaml <<EOF
+RUN mkdir -p /etc/containers/registries.d
+RUN <<EOF
+cat > /etc/containers/registries.d/${IMAGE_NAME}.yaml <<YAML
 docker:
   ghcr.io/${USER_NAME}/${IMAGE_NAME}:
     use-sigstore-attachments: true
+YAML
 EOF
 
-RUN cat > /etc/containers/policy.json <<EOF
+RUN <<EOF
+cat > /etc/containers/policy.json <<JSON
 {
   "default": [{ "type": "insecureAcceptAnything" }],
   "transports": {
@@ -45,6 +48,7 @@ RUN cat > /etc/containers/policy.json <<EOF
     }
   }
 }
+JSON
 EOF
 
 RUN dnf clean all && \
