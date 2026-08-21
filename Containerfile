@@ -23,33 +23,29 @@ RUN dnf -y swap ffmpeg-free ffmpeg --allowerasing
 
 COPY cosign.pub /etc/pki/containers/${IMAGE_NAME}.pub
 
-RUN mkdir -p /etc/containers/registries.d
-RUN <<EOF
-cat > /etc/containers/registries.d/${IMAGE_NAME}.yaml <<YAML
-docker:
-  ghcr.io/${USER_NAME}/${IMAGE_NAME}:
-    use-sigstore-attachments: true
-YAML
-EOF
+RUN mkdir -p /etc/containers/registries.d && \
+  printf '%s\n' \
+  'docker:' \
+  "  ghcr.io/${USER_NAME}/${IMAGE_NAME}:" \
+  '    use-sigstore-attachments: true' \
+  > /etc/containers/registries.d/${IMAGE_NAME}.yaml
 
-RUN <<EOF
-cat > /etc/containers/policy.json <<JSON
-{
-  "default": [{ "type": "insecureAcceptAnything" }],
-  "transports": {
-    "docker": {
-      "ghcr.io/${USER_NAME}/${IMAGE_NAME}": [
-        {
-          "type": "sigstoreSigned",
-          "keyPath": "/etc/pki/containers/${IMAGE_NAME}.pub",
-          "signedIdentity": { "type": "matchRepository" }
-        }
-      ]
-    }
-  }
-}
-JSON
-EOF
+RUN printf '%s\n' \
+  '{' \
+  '  "default": [{ "type": "insecureAcceptAnything" }],' \
+  '  "transports": {' \
+  '    "docker": {' \
+  "      \"ghcr.io/${USER_NAME}/${IMAGE_NAME}\": [" \
+  '        {' \
+  '          "type": "sigstoreSigned",' \
+  "          \"keyPath\": \"/etc/pki/containers/${IMAGE_NAME}.pub\"," \
+  '          "signedIdentity": { "type": "matchRepository" }' \
+  '        }' \
+  '      ]' \
+  '    }' \
+  '  }' \
+  '}' \
+  > /etc/containers/policy.json
 
 RUN dnf clean all && \
   rm -rf /var/cache/* /var/log/* /var/lib/dnf
