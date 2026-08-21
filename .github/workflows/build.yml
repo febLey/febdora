@@ -28,6 +28,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set date tag for scheduled runs
+        id: date
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            DATE_TAG=$(date -u +%Y%m%d)
+            echo "date_tag=${DATE_TAG}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Maximize build space
         uses: ublue-os/remove-unwanted-software@v8
 
@@ -36,7 +44,10 @@ jobs:
         uses: redhat-actions/buildah-build@v3
         with:
           image: ${{ env.IMAGE_NAME }}
-          tags: latest ${{ env.FEDORA_VERSION }}
+          tags: |
+            latest
+            ${{ env.FEDORA_VERSION }}
+            ${{ steps.date.outputs.date_tag && format('{0}-{1}', env.FEDORA_VERSION, steps.date.outputs.date_tag) || '' }}
           containerfiles: |
             ./Containerfile
           build-args: |
@@ -69,3 +80,9 @@ jobs:
             digest=$(skopeo inspect docker://${IMAGE_FULL}:${tag} | jq -r '.Digest')
             cosign sign -y --key env://SIGNING_SECRET "${IMAGE_FULL}@${digest}"
           done
+          # Sign date-tagged image if it exists (daily builds)
+          if [ -n "${{ steps.date.outputs.date_tag }}" ]; then
+            DATE_TAG="${{ steps.date.outputs.date_tag }}"
+            digest=$(skopeo inspect docker://${IMAGE_FULL}:${{ env.FEDORA_VERSION }}-${DATE_TAG} | jq -r '.Digest')
+            cosign sign -y --key env://SIGNING_SECRET "${IMAGE_FULL}@${digest}"
+          fi
