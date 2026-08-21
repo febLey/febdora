@@ -14,6 +14,7 @@ env:
   IMAGE_NAME: febdora
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
   FEDORA_VERSION: "44"
+  USER_NAME: ${{ github.repository_owner }}
 
 jobs:
   build:
