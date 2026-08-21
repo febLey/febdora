@@ -18,7 +18,7 @@ RUN dnf -y install \
   https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm \
   fedora-repos-archive
 
-RUN dnf -y install gcc steam steam-devices zsh
+RUN dnf -y install gcc mangohud steam steam-devices zsh
 RUN dnf -y swap ffmpeg-free ffmpeg --allowerasing
 
 COPY cosign.pub /etc/pki/containers/${IMAGE_NAME}.pub
