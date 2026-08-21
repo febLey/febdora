@@ -1,4 +1,6 @@
 ARG FEDORA_VERSION=44
+ARG IMAGE_NAME=febdora
+ARG USER_NAME=febley
 
 FROM ghcr.io/ublue-os/akmods:ogc-${FEDORA_VERSION} AS akmods
 
@@ -19,12 +21,12 @@ RUN dnf -y install \
 RUN dnf -y install gcc steam steam-devices zsh
 RUN dnf -y swap ffmpeg-free ffmpeg --allowerasing
 
-COPY cosign.pub /etc/pki/containers/febdora.pub
+COPY cosign.pub /etc/pki/containers/${IMAGE_NAME}.pub
 
 RUN mkdir -p /etc/containers/registries.d && \
-  cat > /etc/containers/registries.d/febdora.yaml <<EOF
+  cat > /etc/containers/registries.d/${IMAGE_NAME}.yaml <<EOF
 docker:
-  ghcr.io/febley/febdora:
+  ghcr.io/${USER_NAME}/${IMAGE_NAME}:
     use-sigstore-attachments: true
 EOF
 
@@ -33,10 +35,10 @@ RUN cat > /etc/containers/policy.json <<EOF
   "default": [{ "type": "insecureAcceptAnything" }],
   "transports": {
     "docker": {
-      "ghcr.io/febley/febdora": [
+      "ghcr.io/${USER_NAME}/${IMAGE_NAME}": [
         {
           "type": "sigstoreSigned",
-          "keyPath": "/etc/pki/containers/febdora.pub",
+          "keyPath": "/etc/pki/containers/${IMAGE_NAME}.pub",
           "signedIdentity": { "type": "matchRepository" }
         }
       ]
